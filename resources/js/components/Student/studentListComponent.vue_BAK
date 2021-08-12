@@ -1,0 +1,198 @@
+<template>
+  <div class="app-modal">
+    <create-offer-letter></create-offer-letter>
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Student List</h6>
+      </div>
+      <div class="card-body">
+        <div class="table">
+          <div class="row mb-2">
+            <div class="col-md-4">
+              <input
+                type="text"
+                @keyup="searchStudent"
+                class="form-control bg-light border-0 small"
+                placeholder="Search for name ..."
+                aria-label="Search"
+                aria-describedby="basic-addon2"
+              />
+            </div>
+            <div class="col-md-2"></div>
+            <div class="col-md-6 pull-right text-right">
+              <button class="btn btn-success" @click="showCreateOfferLetter">
+                <i class="fas fa-plus"></i> Add Student
+              </button>
+            </div>
+          </div>
+          <table class="table" id="dataTable" width="100%">
+            <thead>
+              <tr>
+                <th class="text-center">#</th>
+                <th class="text-center">name</th>
+                <th class="text-center">Student Type</th>
+                <th class="text-center">Application Type</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="student_list.length == 0">
+                <td colspan="5" style="text-align:center">NO DATA TO DISPLAY</td>
+              </tr>
+              <tr v-else v-for="student in student_list" :key="student.id">
+                <td class="text-center">{{ student.id }}</td>
+                <td class="text-center">{{ student.name }}</td>
+                <td class="text-center">{{ student.type }}</td>
+                <td class="text-center">{{ student.application_type }}</td>
+                <td class="text-center">
+                  <button @click="showStudent(student._id)" class="btn btn-primary btn-sm">
+                    <i class="far fa-eye"></i>
+                  </button>
+                  <!-- <button class="btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i></button> -->
+                  <button @click="deleteStudent(student._id)" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="row no-padding no-margin">
+            <div class="col-md-12 no-padding">
+              <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-end">
+                  <li v-bind:class="[{disabled: !pagination.prev_page_url}]" class="page-item">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click="fetchStudents(pagination.prev_page_url)"
+                    >Previous</a>
+                  </li>
+                  <li class="page-item" disabled>
+                    <a
+                      class="page-link text-dark"
+                      href="#"
+                    >Page {{pagination.current_page}} of {{pagination.last_page}}</a>
+                  </li>
+                  <li v-bind:class="[{disabled: !pagination.next_page_url}]" class="page-item">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click="fetchStudents(pagination.next_page_url)"
+                    >Next</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import CreateOfferLetter from "./createOfferLetterComponent.vue";
+export default {
+  name: "app-modal",
+  components: {
+    CreateOfferLetter
+  },
+  mounted() {
+    this.fetchStudents();
+  },
+  data() {
+    return {
+      student_list: [],
+      pagination: {},
+      search: ""
+    };
+  },
+  methods: {
+    showCreateOfferLetter() {
+      this.$modal.show("size-modal");
+    },
+
+    fetchStudents(page_url) {
+      let vm = this;
+      page_url = page_url || "/student/list";
+      fetch(page_url)
+        .then(res => res.json())
+        .then(res => {
+          console.log(res);
+          this.student_list = res.data;
+          vm.makePagination(res.meta, res.links);
+        })
+        .catch(err => console.log(err));
+    },
+    makePagination(meta, links) {
+      let pagination = {
+        current_page: meta.current_page,
+        last_page: meta.last_page,
+        next_page_url: links.next,
+        prev_page_url: links.prev
+      };
+      this.pagination = pagination;
+    },
+
+    deleteStudent(student) {
+      const Toast = swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000
+      });
+
+      swal
+        .fire({
+          title: "Are you sure ?",
+          text: "You wont be able to revert this!",
+          type: "warning",
+          width: "25%",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!"
+        })
+        .then(result => {
+          if (result.value) {
+            axios
+              .delete(`/student/${student}`)
+              .then(response => {
+                this.fetchStudents();
+                Toast.fire({
+                  type: "success",
+                  title: "You deleted successfuly"
+                });
+              })
+              .catch(error => {
+                Toast.fire({
+                  type: "error",
+                  title: "Deletion failed"
+                });
+              });
+          }
+        });
+    },
+    showStudent(student) {
+      window.location.href = "student/" + student;
+    },
+    searchStudent: _.debounce(function(e) {
+      this.search = e.target.value;
+      this.url = `/student/search/${this.search}`;
+      let vm = this;
+      if (this.search.length > 2) {
+        fetch(`/student/search/${this.search}`)
+          .then(res => res.json())
+          .then(res => {
+            this.student_list = res.data;
+            vm.makePagination(res.meta, res.links);
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      } else if (this.search.length == 0) {
+        this.fetchStudents();
+      }
+    }, 300)
+  }
+};
+</script>

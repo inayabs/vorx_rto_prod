@@ -1,0 +1,192 @@
+<template lang="">
+    <div class="card shadow mb-4" v-if="!isHidden">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Unit List</h6>
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-2 d-flex justify-content-between">
+                <div class="col-md-4">
+                    <input type="text"  class="form-control bg-light border-0 small" placeholder="Search for name or code..." aria-label="Search">
+                </div>
+                <div class="col-md-2">
+                     <button class="btn btn-success d-block ml-auto" v-on:click="isHidden = !isHidden"><i class="fas fa-plus"></i> Add Unit</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center" width="10%">Unit Code</th>
+                            <th class="text-center" width="70%">Unit Description</th>
+                            <th class="text-center" width="10%">Unit Type</th>
+                            <th class="text-center" width="10%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr v-for="list in units_list.data">
+                            <td>{{ list.code }}</td>
+                            <td>{{ list.description }}</td>
+                            <td>{{ list.unit_type }}</td>
+                            <td>
+                                <div class="btn-group d-table m-auto">
+                                    <button type="button" class="btn btn-primary btn-sm"><i class="far fa-eye"></i></button>
+                                    <button type="button" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <pagination
+            class="mb-0"
+            :data="units_list"
+            @pagination-change-page="getUnitList"
+            :limit="limit"
+            :show-disabled="showDisabled"
+            :size="size"
+            :align="align" />
+
+        </div>
+    </div>
+
+    <div v-else>
+        <div class="clearfix"></div>
+        <h3>Unit Details</h3>
+
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane d-block">
+
+                <div class="row mb-2 d-flex justify-content-between">
+                    <div class="col-md-6">
+                        <button class="btn btn-primary text-primary text-light" v-on:click="isHidden = !isHidden"><i class="fas fa-long-arrow-alt-left"></i> Back</button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-success d-block ml-auto"><i class="far fa-save"></i> Save Unit</button>
+                    </div>
+                </div>
+
+                <div class="horizontal-line-wrapper mb-2">
+                    <h6>Add Units</h6>
+                </div>
+                <div class="form-padding-left-right">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Unit Code:</label>
+                                <input type="text" class="form-control" id="" name="" />
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Assessment Method:</label>
+                                <input type="text" class="form-control" id="" name="" />
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Subject Description:</label>
+                                <input type="text" class="form-control" id="" name="" />
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Subject Field of Education Identifier:</label>
+                                <select class="form-control" id="" name="">
+                                    <option value="">Option 1</option>
+                                    <option value="">Option 2</option>
+                                    <option value="">Option 3</option>
+                                    <option value="">Option 4</option>
+                                    <option value="">Option 5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Unit Type:</label>
+                                <select class="form-control" id="" name="">
+                                    <option value="">Option 1</option>
+                                    <option value="">Option 2</option>
+                                    <option value="">Option 3</option>
+                                    <option value="">Option 4</option>
+                                    <option value="">Option 5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Nominal Hours:</label>
+                                <input type="text" class="form-control" id="" name="" />
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">Training Method:</label>
+                                <select class="form-control" id="" name="">
+                                    <option value="">Option 1</option>
+                                    <option value="">Option 2</option>
+                                    <option value="">Option 3</option>
+                                    <option value="">Option 4</option>
+                                    <option value="">Option 5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="" class="">VET Flag Status:</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                                    <label class="custom-control-label" for="customSwitch1">Toggle this switch element</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+<script>
+
+export default {
+    data() {
+        return {
+            units_list: {},
+            limit: 2,
+            showDisabled: true,
+            size: 'default',
+            align: 'right',
+            isHidden: false
+        }
+    },
+    created() {
+        this.getUnitList();
+    },
+    methods: {
+        getUnitList(page = 1) {
+            axios.get('./api/unit/list?page=' + page)
+            .then(response => {
+                this.units_list =  response.data;
+            });
+        }
+    }
+}
+</script>
+
+<style scoped>
+    .horizontal-line-wrapper{
+        background-color: #355dce;
+        padding: .5rem;
+        color: #fff;
+    }
+    .horizontal-line-wrapper h6{
+        margin-bottom: 0;
+    }
+    .row {
+        padding: 1px;
+    }
+</style>

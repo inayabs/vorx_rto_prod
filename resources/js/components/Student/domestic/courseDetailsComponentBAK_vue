@@ -1,0 +1,807 @@
+<template>
+<div>
+    <div class="btn-group float-right">
+        <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-if="demoUser == false">
+            View
+            <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" @click="generate_invoice()" target="_blank">
+                <i class="far fa-file-pdf text-danger"></i>&nbsp; Invoice
+            </a>
+            <a class="dropdown-item" v-if="courseFeeType == 'FF'" @click="generate_payment_plan()" target="_blank">
+                <i class="far fa-file-excel text-danger"></i>&nbsp; Payment Plan
+            </a>
+        </div>
+    </div>
+    <dynamic-form v-on="$listeners" v-bind:form-settings="makeForm" v-bind:form-values="getValues" v-bind:save-form="store_url"></dynamic-form>
+    <br />
+    <div class="subjects-wrapper" v-if="!isHidden">
+        <div v-bind:class="'horizontal-line-wrapper-'+app_color+' my-3'">
+            <h6>
+                Subject List
+                <span class="badge">
+                    (
+                    <i>Must not be empty. Kindly select course and location in Course Details section accordingly.</i> )
+                </span>
+            </h6>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-3 mb-2 text-right">
+                    <label for style="margin-top: 30px;">
+                        <b>Auto-fill Inputs:</b>
+                    </label>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for style="margin:0;">Start Date - End Date:</label>
+                    <date-picker :popover="{ placement: 'bottom', visibility: 'click' }" v-model="modifyAllDates" mode="range" locale="en" :masks="{L:'DD/MM/YYYY',data:'DD/MM/YYYY'}"></date-picker>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for style="margin:0;">Training Delivery Location:</label>
+                    <select v-model="modifyAll" @change="modifyDlvrLoc" class="form-control">
+                        <option value selected></option>
+                        <option v-for="(opt, optKy) in slct_training_dlvr_loc" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for style="margin:0;">Delivery Mode:</label>
+                    <select v-model="modifyAllMode" @change="modifyDlvrMode" class="form-control">
+                        <option value selected></option>
+                        <option v-for="(opt, optKy) in slct_dlvr_mode" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-md-12 no-padding">
+            <table :class="'table header-'+app_color" id="dataTable" width="100%">
+                <thead>
+                    <tr>
+                        <th :class="'table-header-'+app_color" style="width:5%!important">#</th>
+                        <th :class="'table-header-'+app_color">Code</th>
+                        <th :class="'table-header-'+app_color">Description</th>
+                        <!-- <th :class="'table-header-'+app_color" style="width:7%!important">Subject Type</th> -->
+                        <th :class="'table-header-'+app_color">Start - End Date</th>
+                        <th :class="'table-header-'+app_color">Training Delivery Location</th>
+                        <th :class="'table-header-'+app_color">Delivery Mode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(subject, index) in subjectList" :key="index" style="font-size:12px">
+                        <td>{{ index +1 }}</td>
+                        <td width="12%">{{ subject.subject_code }}</td>
+                        <td width="28%">{{ subject.description }}</td>
+                        <!-- <td>{{ subject.unit_type | capitalize}}</td> -->
+                        <td width="20%">
+                            <date-picker style="font-size:12px" :popover="{ placement: 'bottom', visibility: 'click' }" v-model="subject.dates" mode="range" locale="en" :masks="{L:'DD/MM/YYYY',data:'DD/MM/YYYY'}"></date-picker>
+                        </td>
+                        <td width="15%">
+                            <div class="form-group">
+                                <select class="form-control" style="font-size:12px" v-model="subject.train_org_loc_id">
+                                    <option value></option>
+                                    <option v-for="(opt, optKy) in slct_training_dlvr_loc" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td width="15%">
+                            <div class="form-group">
+                                <select class="form-control" style="font-size:12px" v-model="subject.delivery_mode_id">
+                                    <option value></option>
+                                    <option v-for="(opt, optKy) in slct_dlvr_mode" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" class="text-center" v-if="subjectList != null">{{ subjectList.length }} Subjects found</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" class="text-center" v-if="subjectList == null">No Subject found</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br>
+    <div v-bind:class="'horizontal-line-wrapper-'+app_color+' my-3'">
+        <h6>
+            Unit of Competency
+        </h6>
+    </div>
+    <div class="clearfix"></div>
+    <div class="form-padding-left-right">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="form-group">
+                    <label for="uc_description">Description</label>
+                    <input id="uc_description" name="uc_description" value="" autofocus="autofocus" class="form-control" type="text" v-model="getValues.uc_description">
+                    <!-- <span v-if="errors.uc_description" :class="['badge badge-danger']">{{ errors.uc_description[0] }}</span> -->
+
+                </div>
+            </div>
+            <div class="col-md-12 no-padding">
+                <table :class="'table header-'+app_color" id="dataTable" width="100%">
+                    <thead>
+                        <tr>
+                            <th :class="'table-header-'+app_color" style="width:5%!important">#</th>
+                            <th :class="'table-header-'+app_color">Code</th>
+                            <th :class="'table-header-'+app_color">Description</th>
+                            <!-- <th :class="'table-header-'+app_color" style="width:7%!important">Subject Type</th> -->
+                            <th :class="'table-header-'+app_color">Start - End Date</th>
+                            <th :class="'table-header-'+app_color">Training Delivery Location</th>
+                            <th :class="'table-header-'+app_color">Delivery Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(eu, index) in getValues.courseExtraUnits" :key="index" style="font-size:12px">
+                            <td width="5%">{{ index +1 }}</td>
+                            <td width="15%">{{ eu.subject_code }}</td>
+                            <td width="28%">{{ eu.description }}</td>
+                            <!-- <td width="10%">{{ eu.unit_type | capitalize}}</td> -->
+                            <td width="20%">
+                                <date-picker style="font-size:12px" :popover="{ placement: 'bottom', visibility: 'click' }" v-model="eu.dates" mode="range" locale="en" :masks="{L:'DD/MM/YYYY',data:'DD/MM/YYYY'}"></date-picker>
+                            </td>
+                            <td width="15%">
+                                <div class="form-group">
+                                    <select class="form-control" style="font-size:12px" v-model="eu.train_org_loc_id">
+                                        <option value></option>
+                                        <option v-for="(opt, optKy) in slct_training_dlvr_loc" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                                    </select>
+                                </div>
+                            </td>
+                            <td width="15%">
+                                <div class="form-group">
+                                    <select class="form-control" style="font-size:12px" v-model="eu.delivery_mode_id">
+                                        <option value></option>
+                                        <option v-for="(opt, optKy) in slct_dlvr_mode" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#</td>
+                            <td colspan="5">
+                                <div class="form-group formunits">
+                                    <!-- <label for="units">Select Units:</label> -->
+                                    <multiselect v-model="getValues.courseExtraUnits" :options="server_slct_unit_opt" :multiple="true" :group-select="false" placeholder="Type to search" :close-on-select="false" :custom-label="codeDescription" track-by="subject_code" label="description" :options-limit="300" :limit-text="limitText" :loading="isLoading" @search-change="asyncFind" :class="'multiselect-color-'+app_color [errors && errors.course_units ? 'border-danger' : '' , {'unitsclass':true}]">
+                                        <span slot="noResult">Oops! No units found. Consider changing the search query.</span>
+                                        <!-- group-values="unit-details" 
+                            group-label="unit-type"  
+                            :limit="3" -->
+                                    </multiselect>
+                                    <div v-if="errors && errors.course_units" class="badge badge-danger">{{ errors.course_units[0] }}</div>
+                                </div>
+                            </td>
+                            <!-- <td width="20%">
+                  <date-picker
+                    style="font-size:12px"
+                    :popover="{ placement: 'bottom', visibility: 'click' }"
+                    mode="range"
+                    locale="en"
+                    :masks="{L:'DD/MM/YYYY',data:'DD/MM/YYYY'}"
+                  ></date-picker>
+                </td> -->
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<script>
+import DynamicForm from "../../../components/globals/form/DynamicFormComponent.vue";
+import moment from "moment";
+export default {
+    components: {
+        DynamicForm
+    },
+    props: ["course", "subjects", "extraUnits", 'extraUnitsval'],
+    mounted() {
+        this.csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    },
+    data() {
+        return {
+            demoUser: window.demoUser,
+            app_color: app_color,
+            student_id: window.student_id,
+            subjectList: this.subjects,
+            // SELECT OPTIONS
+            slct_training_dlvr_loc: window.slct_training_dlvr_loc,
+            slct_dlvr_mode: window.slct_dlvr_mode,
+            extraUnitList: this.extraUnits,
+            slct_units: window.slct_units,
+            slct_units_val: this.extraUnitsval,
+
+            train_org_dlvr_loc_id: "",
+            csrfToken: "",
+            store_url: `/student/domestic/${window.student}/course-update`,
+            getValues: this.course || {
+                eligibility: "",
+                course_code: "",
+                location: "",
+                start_date: "",
+                end_date: "",
+                course_fee_type: "",
+                course_fee: "",
+                status_id: "1",
+                remarks: "",
+                courseSubjects: [],
+                courseExtraUnits: [],
+                outcome_id_national: "",
+                funding_source_national: "",
+                commence_prg_identifier: "",
+                training_contract_id: "",
+                client_id_apprenticeships: "",
+                study_reason_id: "",
+                specific_funding_id: "",
+                funding_source_state_training_authority: "",
+                purchasing_contract_id: "",
+                purchasing_contract_schedule_id: "",
+                associated_course_id: "",
+                predominant_delivery_mode: "",
+                full_time_leaning_option: "",
+                uc_description: ""
+            },
+            makeForm: [{
+                    FormTitle: "Course Details",
+                    FormBody: [{
+                            type: "select",
+                            lable: "Course",
+                            name: "course_code",
+                            items: window.slct_course,
+                            col_size: 12,
+                            value: "",
+                            avetmiss: "required"
+                        },
+                        {
+                            type: "select",
+                            lable: "Eligibility",
+                            name: "eligibility",
+                            items: {
+                                E: "Eligible",
+                                NE: "Not Eligible"
+                            },
+                            value: ""
+                        },
+                        {
+                            type: "select",
+                            lable: "Location",
+                            name: "location",
+                            items: window.slct_state,
+                            value: "",
+                            avetmiss: "required"
+                        },
+                        {
+                            type: "datepicker",
+                            lable: "Start Date",
+                            name: "start_date",
+                            value: "",
+                            avetmiss: "required"
+                        },
+                        {
+                            type: "datepicker",
+                            lable: "End Date",
+                            name: "end_date",
+                            value: "",
+                            avetmiss: "required"
+                        },
+                        {
+                            type: "select",
+                            lable: "Course Fee Type",
+                            name: "course_fee_type",
+                            items: "",
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Course Fee",
+                            name: "course_fee",
+                            value: ""
+                        },
+                        {
+                            type: "select",
+                            lable: "Status",
+                            name: "status_id",
+                            items: window.slct_offer_lttr_statuses,
+                            value: "",
+                            col_size: 12
+                        },
+                        {
+                            type: "textbox",
+                            lable: "Remarks",
+                            name: "remarks",
+                            value: "",
+                            col_size: 12
+                        }
+                    ]
+                },
+                {
+                    FormTitle: "Enrolment Details",
+                    FormBody: [
+                        // {
+                        //   type: "select",
+                        //   lable: "Outcome Status",
+                        //   name: "outcome_id_national",
+                        //   items: window.slct_outcome_status,
+                        //   value: "",
+                        //   avetmiss : 'required'
+                        // },
+                        {
+                            type: "select",
+                            lable: "Funding Source",
+                            name: "funding_source_national",
+                            items: window.slct_funding_source_national,
+                            value: "",
+                            avetmiss: "required"
+                        },
+                        {
+                            type: "select",
+                            lable: "Commencing Course",
+                            name: "commence_prg_identifier",
+                            items: window.slct_com_course,
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Training Contract",
+                            name: "training_contract_id",
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Client ID Apprenticeships",
+                            name: "client_id_apprenticeships",
+                            value: ""
+                        },
+                        {
+                            type: "select",
+                            lable: "Study Reason",
+                            name: "study_reason_id",
+                            items: window.slct_study_reason,
+                            value: ""
+                        },
+                        {
+                            type: "select",
+                            lable: "Specific Funding",
+                            name: "specific_funding_id",
+                            items: window.slct_specific_fund,
+                            value: ""
+                        },
+                        {
+                            type: "select",
+                            lable: "Funding Source State",
+                            name: "funding_source_state_training_authority",
+                            items: window.slct_funding_source_state,
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Purchasing Contract",
+                            name: "purchasing_contract_id",
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Purchasing Contract Schedule",
+                            name: "purchasing_contract_schedule_id",
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Associated Course",
+                            name: "associated_course_id",
+                            value: ""
+                        },
+                        {
+                            type: "select",
+                            lable: "Predominant Delivery Mode",
+                            name: "predominant_delivery_mode",
+                            items: window.slct_predom_dlvr_mode,
+                            value: ""
+                        },
+                        {
+                            type: "text",
+                            lable: "Full-time Learning Option",
+                            name: "full_time_leaning_option",
+                            value: ""
+                        }
+                    ]
+                }
+            ],
+            errors: [],
+            // isHidden: true,
+            modifyAll: "",
+            modifyAllMode: "",
+            modifyAllDates: [],
+            courseFeeType: "",
+            server_slct_unit_opt: [],
+            isLoading: false,
+            isHidden: false
+        };
+    },
+    created() {
+        this.fetchData();
+        // console.log(this.course.course.courseprospectus);
+    },
+    methods: {
+        generate_invoice() {
+            window.open(
+                `/student/domestic/${window.student}/${this.getValues.course_code}`,
+                "_blank"
+            );
+        },
+        generate_payment_plan() {
+            window.open(
+                `/student/domestic/payment-plan/${window.student}/${this.getValues.course_code}`,
+                "_blank"
+            );
+        },
+        // fetchUnitOption() {
+        //   axios
+        //     .get("/api/unit_options/list")
+        //     .then(res => {
+        //       console.log(res);
+        //       this.server_slct_unit_opt = res.data;
+        //       console.log(this.server_slct_unit_opt);
+        //     })
+        //     .catch(err => {
+        //       console.log(err);
+        //     });
+        // },
+        limitText(count) {
+            return `and ${count} other units`
+        },
+        asyncFind(search) {
+            let vm = this;
+            vm.isLoading = true;
+            axios
+                .get('/unit_options/' + search)
+                .then(res => {
+                    console.log(res);
+                    vm.server_slct_unit_opt = res.data;
+                    vm.isLoading = false;
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+                .then(function () {
+                    // always executed
+                    // alert(af.selectedStudent);
+                    vm.isLoading = false;
+                });
+        },
+        codeDescription({
+            subject_code,
+            description,
+            unit_type
+        }) {
+            // let unit = '';
+            // if(unit_type != ''){
+            //   unit = `${subject_code} — ${description} [${unit_type}]`;
+            // }else{
+            //   unit = `${subject_code} — ${description}`;
+            // }
+            // return unit;
+
+            return `${subject_code} — ${description}`;
+        },
+        fetchData() {
+            // @ dynamic form
+            // axios({
+            //     method: 'get',
+            //     url: `/student/domestic/${window.student}/info`
+            // })
+            // .then(res => {
+            // console.log(res.data.unitList);
+            // this.unitList = res.data.unitList;
+            // this.unitList = window.xtra_unitList;
+            if (window.course_details != null) {
+                let vm = this;
+                this.courseFeeType = this.getValues.course_fee_type;
+
+                if (vm.getValues.course_code == '@@@@') {
+                    vm.isHidden = true;
+                } else {
+                    vm.isHidden = false;
+                }
+
+                if (
+                    this.getValues.start_date != null &&
+                    this.getValues.end_date != null
+                ) {
+                    let s_date = new Date(this.getValues.start_date);
+                    let e_date = new Date(this.getValues.end_date);
+                    // return s_date.toLocaleDateString(['en-US'], {month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'})  //if you want, you can change locale date string
+                    this.getValues.start_date = moment(s_date)._d;
+                    this.getValues.end_date = moment(e_date)._d;
+                } else {
+                    this.getValues.start_date = null;
+                    this.getValues.end_date = null;
+                }
+
+                if (this.getValues.eligibility == "E") {
+                    this.makeForm[0].FormBody[5].items = {
+                        C: "Concessional",
+                        NC: "Non Concessional",
+                        FF: "Fee for Service"
+                    };
+                } else if (this.getValues.eligibility == "NE") {
+                    this.makeForm[0].FormBody[5].items = {
+                        NC: "Non Concessional",
+                        FF: "Fee for Service"
+                    };
+                }
+            }
+
+            if (this.subjects != null) {
+                this.subjectList.forEach(e1 => {
+                    if (e1.dates.start_date != null && e1.dates.end_date != null) {
+                        let s_date = new Date(e1.dates.start_date);
+                        let e_date = new Date(e1.dates.end_date);
+                        e1.dates = {
+                            start: moment(s_date)._d,
+                            end: moment(e_date)._d
+                        };
+                    } else {
+                        e1.dates = null;
+                    }
+                });
+            }
+            if (this.extraUnits != null) {
+                this.getValues.courseExtraUnits.forEach(e1 => {
+                    if (e1.dates.start_date != null && e1.dates.end_date != null) {
+                        let s_date = new Date(e1.dates.start_date);
+                        let e_date = new Date(e1.dates.end_date);
+                        e1.dates = {
+                            start: moment(s_date)._d,
+                            end: moment(e_date)._d
+                        };
+                    } else {
+                        e1.dates = null;
+                    }
+                });
+            }
+
+            // })
+            // .catch(err => console.log(err));
+        },
+        getCourseFee() {
+            let vm = this;
+            let filters = {
+                course_code: vm.getValues.course_code,
+                location: vm.getValues.location,
+                course_fee_type: vm.getValues.course_fee_type
+            };
+            // Hide/show subjectList
+            if (vm.getValues.course_code == '@@@@') {
+                // console.log(filters.course_code);
+                vm.isHidden = true;
+            } else {
+                vm.isHidden = false;
+            }
+
+            if (
+                filters.course_code != null &&
+                filters.location != null &&
+                filters.course_fee_type != null
+            ) {
+                // console.log(filters);
+                let str = JSON.stringify(filters);
+                let code = vm.getValues.course_code;
+                fetch(`/student/getCourseFee/${str}/${code}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.course_subjects != null) {
+                            this.subjectList = res.course_subjects;
+                            this.getValues.courseSubjects = this.subjectList;
+                        }
+
+                        if (res.data != null) {
+                            if (filters.course_fee_type == "C") {
+                                this.getValues.course_fee = res.data.concessional_fee;
+                            } else if (filters.course_fee_type == "NC") {
+                                this.getValues.course_fee = res.data.non_concessional_fee;
+                            } else {
+                                this.getValues.course_fee = res.data.full_fee;
+                            }
+                        } else {
+                            this.getValues.course_fee = "";
+                        }
+                        console.log(this.getValues.course_fee);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+
+            }
+        },
+        // saveExtraUnits(){
+        //     axios.post(`/student/domestic/${window.student}/extra_units`, this.unit_details)
+        //             .then(response => {
+        //                 console.log(response);
+        //                 if (response.data.status == "errors") {
+        //                     this.errors = response.data.errors;
+        //                 } else {
+        //                     this.errors = [];
+        //                     // this.unit_details.units = '';
+        //                     this.success = true;
+        //                     Toast.fire({
+        //                         type: 'success',
+        //                         title: 'Data is saved successfully',
+        //                     });
+        //                     // this.$parent.$children[4].fetchComSetting();
+        //                     // this.$parent.$children[1].unitList = this.unit_details.units;
+        //                 }
+        //             })
+        //             .catch(error => {
+        //                 Toast.fire({
+        //                     type: "error",
+        //                     title: "Fail to add Data"
+        //                 });
+        //                 console.log(error);
+        //             });
+        // },
+        // editExtraUnits (id) {
+        //     // console.log(id);
+        //     let i  = this.unitList.map(item => item.id).indexOf(id);
+        //     console.log(i);
+        //     let selectedUnits;
+        //     this.unitList.forEach(element => {
+        //         if(element.id == id){
+        //             selectedUnits = element;
+        //         }
+        //     });
+        //     // console.log(selectedUnits);
+        //     let units = selectedUnits.units.trim().split(',');
+        //     let viewUnits = [];
+
+        //      units.forEach(e2=>{
+        //         this.slct_units.forEach(element=>{
+        //              if(element.code ==(e2.trim()) ){
+        //                 //  console.log(element.code);
+        //                 console.log(element);
+        //                 viewUnits.push({
+        //                 id : element.id,
+        //                 code : element.code,
+        //                 value : element.code+' '+'-'+' '+element.description ,
+        //                 description  :  element.description
+        //                 })
+        //             }
+        //         })
+        //         })
+        //     this.unit_details.student_id = window.student_id
+        //     this.unit_details.id = id
+        //     this.unit_details.units = viewUnits;
+        // },
+        saveChanges() {
+            // @ dynamic form
+        },
+        eligible_checker(option) {
+            console.log(option);
+            if (option == "E") {
+                this.makeForm[0].FormBody[5].items = {
+                    C: "Concessional",
+                    NC: "Non Concessional",
+                    FF: "Fee for Service"
+                };
+            } else {
+                this.makeForm[0].FormBody[5].items = {
+                    NC: "Non Concessional",
+                    FF: "Fee for Service"
+                };
+            }
+        },
+
+        addTag(newTag) {
+            const tag = {
+                name: newTag,
+                code: newTag.substring(0, 2) + Math.floor(Math.random() * 10000000)
+            };
+            this.units.push(tag);
+            this.slct_units.push(tag);
+        },
+        modifyDlvrLoc() {
+            let vm = this;
+            if (vm.subjectList != null) {
+                vm.subjectList.forEach(element => {
+                    element.train_org_loc_id = vm.modifyAll;
+                });
+            }
+        },
+        modifyDlvrMode() {
+            let vm = this;
+            if (vm.subjectList != null) {
+                vm.subjectList.forEach(element => {
+                    element.delivery_mode_id = vm.modifyAllMode;
+                });
+            }
+        },
+        getNewDates(dates) {
+            let vm = this;
+
+            if (vm.subjectList != null) {
+                vm.subjectList.forEach(element => {
+                    if (dates != null) {
+                        // console.log("hello");
+                        let s_date = new Date(dates.start);
+                        let e_date = new Date(dates.end);
+
+                        element.dates = {
+                            start: moment(s_date)._d,
+                            end: moment(e_date)._d
+                        };
+                    }
+                });
+            }
+        }
+    },
+    watch: {
+        "getValues.eligibility": function (newVal) {
+            this.eligible_checker(newVal);
+        },
+        "getValues.course_code": function (newVal) {
+            this.getValues.course_code = newVal;
+            this.getCourseFee();
+        },
+        "getValues.location": function (newVal) {
+            this.getValues.location = newVal;
+            this.getCourseFee();
+        },
+        "getValues.course_fee_type": function (newVal) {
+            this.getValues.course_fee_type = newVal;
+            this.getCourseFee();
+        },
+        modifyAllDates: function (newVal) {
+            this.getNewDates(newVal);
+        },
+        course: function (newVal) {
+            console.log(newVal);
+        }
+    },
+    filters: {
+        capitalize: function (value) {
+            if (!value) return "";
+            value = value.toString();
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        }
+    }
+};
+</script>
+
+<style>
+.tab-pane {
+    border: 1px solid #e0dfdf;
+    border-top: none;
+    padding: 1.3rem;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    background-color: #ffffff;
+}
+
+table tbody tr td input.vc-text-base {
+    font-size: 12px !important;
+}
+
+.formunits {
+    counter-reset: my-awesome-counter;
+}
+
+.formunits .unitsclass .multiselect__tags-wrap {
+    display: inline-grid;
+}
+
+.formunits .unitsclass .multiselect__tags-wrap .multiselect__tag:before {
+    counter-increment: my-awesome-counter;
+    content: counter(my-awesome-counter) ". ";
+    color: #024b67;
+    font-weight: bold;
+}
+
+th {
+    border-left: .5px solid #fff !important;
+}
+</style>

@@ -1,0 +1,643 @@
+<template>
+    <div class="app-modal">
+
+        <div class="card border-0 shadow-lg ">
+            <div class="card-header">
+                <span class="font-weight-bold h5"> Language, Literacy and Numeracy (LLN) Test</span>
+            </div>
+            <div class="card-body p-0">
+                <div>
+                    <!-- Nested Row within Card Body -->
+                    <div class="row px-4 pt-4" v-for="(v, key) in pages[cur_page].component" :key="key">
+                        <div :class="'horizontal-line-wrapper-'+app_color+' mb-2 col-12 '">
+                            <h6>{{v.title}}</h6>
+                        </div>
+                        <div v-for="(itm, k) in v.inputs" :key="k" v-bind:class="toType(itm['col_size']) !== 'undefined' ? 'col-md-'+itm['col_size'] : 'col-md-6'">
+                            <div v-if="itm['type'] === 'text'">
+                                <!-- text -->
+                                <div class="form-group">
+                                    <label for="company_name">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span> <span class="font-weight-bold" v-if="toType(itm['optional']) !== 'undefined'"><em>(Optional)</em></span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i :class="'fas fa-'+app_color+'-circle'"></i>
+                                    </a></label>
+                                    <input class="form-control" v-bind:name="itm['name']" type="text" v-if="toType(itm['readOnly']) !== 'undefined'" readonly v-bind:id="itm['name']" v-model="inputs[itm['name']] ">
+                                    <input class="form-control" v-bind:name="itm['name']" type="text" v-else v-bind:id="itm['name']" v-model="inputs[itm['name']]">
+                                    
+                                    <!-- <div v-if="errors && errors['inputs.'+itm['name']]" class="badge badge-danger">{{ errors['inputs.'+itm['name']][0] }}</div> -->
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'select'">
+                                <!-- selectbox -->
+                                <div class="form-group">
+                                    <label for="agent_type">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <select name="agent_type" class="form-control" v-model="inputs[itm['name']] = itm['value']">
+                                        <option v-for="(opt, optKy) in itm['items']" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                                    </select>
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'date'">
+                                <!-- selectbox -->
+                                <!-- <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <select v-bind:name="itm['name']" class="form-control" v-model="inputs[itm['name']] = itm['value']">
+                                        <option v-for="(opt, optKy) in itm['items']" v-bind:key="optKy" v-bind:value="optKy">{{opt}}</option>
+                                    </select>
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div> -->
+
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <date-picker  locale="en" v-model="inputs[itm['name']]"></date-picker>
+                                    <!-- <div v-if="errors && errors['acs.registered_gst_date']" class="badge badge-danger">{{ errors['acs.registered_gst_date'][0] }}</div> -->
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+
+                            </div>
+                            <div v-else-if="itm['type'] === 'checkbox'">
+                                <!-- checkbox -->
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <div class="custom-control custom-switch my-2">
+                                        <input type="checkbox" class="custom-control-input" v-bind:id="itm['name']" v-model="inputs[itm['name']] = itm['value']">
+                                        <label class="custom-control-label" v-bind:for="itm['name']"></label> 
+                                        <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'number'">
+                                <!-- number -->
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <input class="form-control" v-bind:name="itm['name']" type="number"  v-bind:id="itm['name']" v-model="inputs[itm['name']] = itm['value']">
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'radio'">
+                                <!-- radiobox -->
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <p>
+                                        <span v-for="(v, k) in itm['content']" :key="k">
+                                            <div class="radio-control"><input class="" type="radio" :value="v.value" v-bind:id="itm['name']" v-model="inputs[itm['name']]"> {{v.description}}</div>
+                                        </span>
+                                    </p>
+                                    
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'email'">
+                                <!-- emailbox -->
+                                <div class="form-group">
+                                    <label for="company_name">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <input class="form-control" v-bind:name="itm['name']" type="email"  v-bind:id="itm['name']" v-model="inputs[itm['name']] = itm['value']">
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'password'">
+                                <!-- passwordbox -->
+                                <div class="form-group">
+                                    <label for="company_name">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <input class="form-control" v-bind:name="itm['name']" type="password"  v-bind:id="itm['name']" v-model="inputs[itm['name']] = itm['value']">
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'textarea'">
+                                <!-- textbox -->
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <textarea class="form-control" v-bind:name="itm['name']"  v-bind:id="itm['name']" v-model="inputs[itm['name']]"></textarea>
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'multiselect'">
+                                <!-- multiselect -->
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <multiselect 
+                                        v-model="inputs[itm['name']] = itm['value']" 
+                                        :options="itm['selections']" 
+                                        :multiple="itm['multiselect']"  
+                                        placeholder="Type to search" 
+                                        :close-on-select="itm['multiselect'] == true ? false : true"  
+                                        :track-by="toType(itm['mTrackBy']) !== 'undefined' ? itm['mTrackBy'] : 'value'" 
+                                        :label="toType(itm['mLabel']) !== 'undefined' ? itm['mLabel'] : 'value'"
+                                    >
+                                        <span slot="noResult">Oops! No units found. Consider changing the search query.</span>
+                                    </multiselect>
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'card'">
+                                <!-- card -->
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <div v-for="(content, key_content) in itm['content']" :key="key_content">
+                                        
+                                        <p v-if="content.type == 'paragraph'"><span v-html="content.body"></span></p>
+                                        
+                                        <table v-if="content.type == 'table'" width="100%">
+                                            <thead v-if="toType(content.body.thead) !== 'undefined'">
+                                                <tr>
+                                                    <th class="text-center" :width="toType(content.body.column_width) !== 'undefined' ? content.body.column_width[k_list] : ''" v-for="(list, k_list) in content.body.thead" :key="k_list" v-html="list"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody v-if="toType(content.body.tbody) !== 'undefined'">
+                                                <tr v-for="(row, k_row) in content.body.tbody" :key="k_row">
+                                                    <td valign='top' v-for="(col, k_col) in row" :key="k_col">
+                                                        <!-- input inside td -->
+                                                        <div v-if="col['type'] === 'text'">
+                                                            <!-- yoooooooooooooooooooo -->
+                                                            <div class="form-group" style="margin-bottom:0;">
+                                                                <input class="form-control" v-bind:name="col['name']" type="text" v-if="toType(col['readOnly']) !== 'undefined'" readonly v-bind:id="col['name']" v-model="inputs[col['name']]">
+                                                                <input class="form-control" v-bind:name="col['name']" type="text" v-else v-bind:id="col['name']" v-model="inputs[col['name']]">
+                                                                
+                                                                <span v-if="errors && errors[col['name']]" class="badge badge-danger">{{ errors[col['name']][0] }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <!-- text only -->
+                                                        <span v-else :class="content.body | table_class_addons(k_col)" v-html="col"></span>
+
+                                                    </td>
+
+                                                    <!-- <td valign='top' v-for="(col, k_col) in row" :key="k_col" :class="content.body | table_class_addons(k_col)" v-html="col"></td>  -->
+                                                    
+                                                    <!-- <td valign='top' v-for="(col, k_col) in row" :key="k_col" :class="'pt-2 align-top '+toType(content.body.text_type) !== 'undefined' ? content.body.text_type[k_col] : 'text-left'+ toType(content.body.background_color) !== 'undefined' ?  ' '+content.body.background_color[k_col] : ''" v-html="col"></td> -->
+                                                    <!-- <td>{{content.body.column_width[0]}}</td> -->
+                                                    <!-- <td>{{content.body.text_type | text_type()}}</td> -->
+                                                </tr>
+                                            </tbody>
+                                            <!-- <tr v-for="(body, key_body) in content.body" :key="key_body">
+                                                <td class="text-center" v-for="(list, k_list) in body" :key="k_list" v-html="list"></td>
+                                            </tr> -->
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else-if="itm['type'] === 'attachment'">
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <Attachments
+                                        v-bind:fileTypeValidate="['jpeg','jpg','png', 'pdf']"
+                                        v-bind:fileSizeValidate="5000000"
+                                    ></Attachments>
+                                </div>
+                                
+                            </div>
+                            <div v-else-if="itm['type'] === 'check-description'">
+                                <div class="form-group">
+                                    <label v-bind:for="itm['name']">{{itm['label']}} <span v-if="toType(itm['required']) !== 'undefined'">*</span>
+                                    <a
+                                        v-if="toType(itm['tooltip']) !== 'undefined'"
+                                        href="#"
+                                        data-toggle="tooltip"
+                                        :class="'a-'+app_color"
+                                        :title="itm['tooltip']"
+                                        data-placement="right"
+                                    >
+                                        <i class="fas fa-info-circle"></i>
+                                    </a></label>
+                                    <!-- <p v-for="(itm, key) in itm['content']" :key="key">
+                                        <input v-if="typeof itm.paragraph === 'undefined'" type="checkbox" class="" v-model="inputs[itm['name']+'-'+key] = itm['value'][key]" style="width: 35px;height: 20px;">
+                                        <span v-html="itm.description"></span>
+                                    </p> -->
+                                    <p>
+                                        <span v-for="(v, k) in itm['content']" :key="k">
+                                            <div class="radio-control"><input class="" type="checkbox" :value="v.value" v-bind:id="itm['name']" v-model="inputs[itm['name']]" style="width: 35px;height: 20px;"> {{v.description}}</div>
+                                        </span>
+                                    </p>
+                                    
+                                    <span v-if="errors && errors[itm['name']]" class="badge badge-danger">{{ errors[itm['name']][0] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- navigation -->
+                    <div class="row p-3">
+                        <div class="col-lg-6 col-md-6 col-sm-6 text-left">
+                            <button class="btn btn-primary" v-if="toType(pages[cur_page - 1]) !== 'undefined'" @click="change_page(cur_page - 1)"><i class="fas fa-arrow-circle-left"></i> Back</button>
+                        </div>
+
+                        <div class="col-lg-6 col-md-6 col-sm-6 text-right">
+                            <button class="btn btn-primary" v-if="toType(pages[cur_page  + 1]) !== 'undefined'" @click="change_page(cur_page + 1)">Next <i class="fas fa-arrow-circle-right"></i></button>
+                            
+                            <button class="btn btn-success" v-else @click="saveChanges()"><i class="far fa-save"></i> Submit</button>
+                               
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+
+import Attachments from './FileDragDropComponent.vue';
+import moment from "moment";
+
+export default {
+    mounted() {
+        this.csrfToken = document.querySelector('meta[name="csrf-token"]').content
+    },
+    components: {
+        Attachments
+    },
+    data () {
+        return {
+            app_color: app_color,
+            // courses : window.courses,
+            cur_page : 0,
+            pages : {},
+            personalDetails: window.personal_details,
+            student_name: window.student_name,
+            student_dob: window.student_dob,
+            inputs: {},
+            savePages: {},
+            errors: [],
+            saveForm: `/lln-test/${window.process_id}/submit`,
+        }
+    },
+    created() {
+        // console.log(window.lln_inputs);
+        this.pages = window.pages;
+        this.fetchData();
+        this.student_name = typeof window.student_name !== 'undefined' ? window.student_name : '';
+        this.inputs = typeof window.lln_inputs !== 'undefined' ? window.lln_inputs : this.inputs;
+        // console.log(this.inputs);
+    },
+    methods: {
+        toType(obj) {
+            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+        },
+        change_page (change_page) {
+            this.cur_page = change_page;
+        },
+        test () {
+                // axios.get('https://demo.vorx.com.au/api/user/list')
+                // .then(function(res){
+                //     console.log(res.data);
+                // })
+                // .catch(function (err){
+                //     console.log(err);
+                // })
+
+                axios({
+                url: 'https://demo.vorx.com.au/api/user/list',
+                method: 'get',
+                })
+                .then(function(res){
+                console.log(res.data);
+                })
+                .catch(function (err){
+                console.log(err);
+                })
+        },
+        fetchData(){
+        },
+        saveChanges() {
+                let vm = this;
+                let inputs = vm.inputs
+                // console.log(this.saveForm);
+                // alert(this.csrfToken);
+
+                if (inputs.date_of_birth != null) {
+                    if(inputs.date_of_birth != 'undefined'){
+                        inputs.date_of_birth = moment(inputs.date_of_birth).format("YYYY-MM-DD");
+                    }
+                }else{
+                    inputs.date_of_birth = null;
+                }
+
+                if (inputs.date != null) {
+                    if(inputs.date != 'undefined'){
+                        inputs.date = moment(inputs.date).format("YYYY-MM-DD");
+                    }
+                }else{
+                    inputs.date = null;
+                }
+
+                if (inputs.outcome_assessor_date != null) {
+                    if(inputs.outcome_assessor_date != 'undefined'){
+                        inputs.outcome_assessor_date = moment(inputs.outcome_assessor_date).format("YYYY-MM-DD");
+                    }
+                }else{
+                    inputs.outcome_assessor_date = null;
+                }
+
+                // console.log(inputs.date_of_birth);
+                // console.log(inputs.date);
+                // console.log(inputs.outcome_assessor_date);
+            let data = {
+                inputs: inputs,
+                // savePages: vm.pages
+            }
+            swal.fire({
+                title: 'Submit LLN Test?',
+                // text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes!'
+            }).then((result) => {
+                if (result.value) {
+
+                    swal.fire({
+                        title: 'Submitting LLN Test...',
+                        // html: '',// add html attribute if you want or remove
+                        allowOutsideClick: false,
+                        onBeforeOpen: () => {
+                            swal.showLoading()
+                        },
+                    });
+
+                    axios.post(this.saveForm, data)
+                    .then(res => {
+                        // console.log(res);
+                        if(res.data.status == 'success'){
+                            // console.log(pages);
+                            // console.log(this.inputs);
+                            this.errors = [];
+                            this.inputs = [];
+                            swal.fire({
+                                title: 'LLN Test submitted successfully',
+                                type: "success",
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                            window.location.href = '/online-enrolment/process/'+window.process_id;
+
+                        }else if(res.data.status == 'errors'){
+                            // console.log(res.data.errors);
+                            this.errors = res.data.errors;
+                            swal.fire({
+                                title: typeof res.data.message !== 'undefined' ? res.data.message : 'Opss.. was not submitted successfully',
+                                type: "error",
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+
+                        }else{
+                            swal.fire({
+                                title: typeof res.data.message !== 'undefined' ? res.data.message : 'Opss.. was not submitted successfully',
+                                type: "error",
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        }
+                    })
+                    .catch(err => console.log(err));
+                }
+            });
+        },
+    },
+    filters: {
+        text_type: function (string) {
+            // let arr = string.split(',');
+            // let arr = typeof string;
+            // let arr = typeof string;
+            // string.forEach(element => {
+            //     console.log(element);
+            // });
+            // return string.join();
+            // return arr[key];
+        },
+        table_class_addons: function (body, key) {
+            let string = 'pt-2 align-top ';
+
+            if(typeof body.text_type !== 'undefined' && typeof body.text_type[key] !== 'undefined'){
+                string += body.text_type[key];
+                string += ' ';
+            }
+
+            if(typeof body.background_color !== 'undefined' && typeof body.background_color[key] !== 'undefined'){
+                string += body.background_color[key];
+                string += ' ';
+            }
+            // console.log(string);
+            return string;
+        }
+    },
+    watch: {
+        pages : function (newval,oldval){
+            // console.log(newval);
+            let data = {};
+            newval.forEach(element => {
+
+                element.component.forEach(elem => {
+                    elem.inputs.forEach(el => {
+                        
+                        data[el.name] = null;
+                        
+                        if(el.name == 'candidate_name'){
+                            data[el.name] = this.student_name;
+                        }
+
+                        if(el.type == 'date' && typeof this.inputs[el.name] !== 'undefined'){
+                            data[el.name] = moment(this.inputs[el.name])._d;
+                            // console.log(this.inputs[el.name]);
+                        }
+
+                        if(el.name == 'date_of_birth'){
+                            data[el.name] = moment(this.student_dob)._d;
+                        }
+
+                        
+                        if(this.inputs[el.name] !== null){
+                            data[el.name] = this.inputs[el.name];
+                            if(el.type == 'date' && typeof this.inputs[el.name] !== 'undefined'){
+                                data[el.name] = moment(this.inputs[el.name])._d;
+                                // console.log(this.inputs[el.name]);
+                            }
+
+                            if(el.name == 'date_of_birth'){
+                                data[el.name] = moment(this.inputs[el.name])._d;
+                            }
+                        }
+
+                        if(el.type == 'card'){
+                            // console.log(el)
+                            el.content.forEach(e => {
+                                // console.log(e.type);
+                                if(e.type == 'table'){
+                                    // console.log(e.body.tbody);
+                                    e.body.tbody.forEach(e1 => {
+                                        // console.log(e1);
+                                        e1.forEach(e2 => {
+                                            // console.log(e2);
+                                            if(typeof e2.name !== 'undefined'){
+                                                // console.log(e2);
+                                                data[e2.name] = null;
+                                                if(this.inputs[e2.name] !== null){
+                                                    data[e2.name] = this.inputs[e2.name];
+                                                }
+                                            }
+                                        })
+                                        
+                                    })
+                                }
+                            })
+                        }
+
+                        
+                        // console.log(el);
+                    });
+                });
+            });
+            
+            this.inputs = data;
+        },
+    }
+}
+</script>
+
+
+<style scoped>
+    /* td.text-center{
+        border-right-color: #fff !important;
+        border-left-color: #fff !important;
+        vertical-align: top !important;
+    } */
+    td {
+        border : 1px solid #bdbdbd !important;
+    }
+    textarea#parta_assessor_notes, textarea#outcome_outline{
+        height: 500px!important;
+    }
+    textarea#partb_task1_q1, textarea#partb_task1_q2, textarea#partb_task1_q3{
+        height: 420px!important;
+    }
+    table tr th, table tr td{padding: 5px 10px;}
+    .horizontal-line-wrapper-primary{padding: 5px 10px!important;}
+    .radio-control{margin-right:8px;}
+</style>

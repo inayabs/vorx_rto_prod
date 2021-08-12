@@ -1,0 +1,21 @@
+/* Custom Form */
+.form-group{
+    label{
+        // color: $blue !important;
+        color: #858796 !important;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+}
+
+.form-control, .multiselect{
+    border-radius: 5px;
+}
+
+.ck.ck-toolbar,
+.ck.ck-editor__main>.ck-editor__editable:not(.ck-focused),
+.multiselect,
+.input-group-text,
+.form-control{
+    border-color: rgba(0, 0, 0, 0.5) !important;
+}

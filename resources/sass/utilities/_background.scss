@@ -1,0 +1,161 @@
+// Background Gradient Utilities
+
+@each $color, $value in $theme-colors {
+  .bg-gradient-#{$color} {
+    background-color: $value;
+    // background-color: black;
+    background-image: linear-gradient(180deg, $value 10%, darken($value, 15%) 100%);
+    background-size: cover;
+  }
+  // .bg-gradient-primary {
+  //   background-image: linear-gradient(180deg, $brand-facebook 40%, darken($value, 15%) 100%) !important;
+  // }
+  .text-#{$color} {
+    color : $value;
+  }
+
+  .btn-#{$color} {
+    color: #fff;
+    background-color: $value;
+    border-color: $value;
+  }
+
+  .a-#{$color} {
+    color : $value;
+  }
+  
+  .horizontal-line-wrapper-#{$color} {
+    background-color: $value;
+    padding: 0.5rem;
+    padding-bottom: 0.1rem !important;
+    color: #fff !important;
+  }
+
+  .nav-link-#{$color} {
+    display: block;
+    padding: 0.5rem 1rem;
+    border-radius: 0;
+    margin-bottom: -1px;
+  }
+  .nav-link-#{$color}.active {
+    border-top: 3px solid $value;
+    background-color: #fff !important;
+    border-bottom: #fff !important;
+    padding: 0.335rem 1rem;
+    border-left: 1px solid #e0dfdf;
+    border-right: 1px solid #e0dfdf;
+  }
+
+  .header-#{$color} .table-responsive .VueTables__table thead tr th{
+    background-color: $value !important;
+    border: 1px solid $value !important;
+    border-right: .5px solid #fafafa !important;
+  }
+
+  .header-#{$color} nav.text-center ul li a.page-link {
+    color: $value;
+  }
+
+  .header-#{$color} nav.text-center ul li a.page-link.active{
+    z-index: 3;
+    color: #fff !important;
+    background-color: $value !important;
+    border-color: $value !important;
+  }
+
+  .background-#{$color}{
+    background-color: $value !important;
+    border: 1px solid $value !important;
+    color:#fff;
+  }
+  .table-header-#{$color}{
+    background-color: $value !important;
+    border: 1px solid $value !important;
+    border-right: .5px solid #fafafa !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+  }
+
+  .multiselect-color-#{$color} .multiselect__content-wrapper .multiselect__content .multiselect__element span.multiselect__option.multiselect__option--highlight {
+    background: $value !important;
+    outline: none;
+    color: #fff;
+  }
+
+  .multiselect-color-#{$color} .multiselect__content-wrapper .multiselect__content .multiselect__element span.multiselect__option.multiselect__option--highlight::after {
+    background: $value !important;
+    outline: none;
+    color: #fff;
+  }
+
+  .multiselect-color-#{$color} .multiselect__tags .multiselect__tags-wrap .multiselect__tag {
+    background: $value !important;
+    position: relative;
+    display: inline-block;
+    padding: 0.25rem 2.1rem 0.25rem 0.4rem;
+    border-radius: 0.35rem;
+    margin-right: 0.4rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    font-size: 75%;
+    font-weight: normal;
+  }
+  .multiselect-color-#{$color} .multiselect__tags .multiselect__tags-wrap .multiselect__tag .multiselect__tag-icon {
+    cursor: pointer;
+    margin-left: 0.25rem;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    font-style: initial;
+    width: 1.7rem;
+    text-align: center;
+    line-height: 1.7rem;
+    transition: all 0.2s ease;
+    font-size: 75%;
+    font-weight: normal;
+    background: #474747;
+    color: #fff;
+  }
+
+  .multiselect-color-#{$color} .multiselect__tags .multiselect__tags-wrap .multiselect__tag .multiselect__tag-icon::after {
+    content: "\D7";
+    color: #fff;
+    font-size: 220%;
+  }
+
+  .dropdown-header-#{$color} {
+    background-color: $value !important;
+    border: 1px solid $value !important;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    color: #fff;
+  }
+
+  .card-#{$color}:hover, .card-#{$color}.selected {
+    background-color: $value;
+    color: #fff;
+  }
+
+  .v--modal-box{
+    h4.modal-header-#{$color}{
+      background: $value!important;
+      color: $white;
+    }
+  }
+
+}
+
+// Grayscale Background Utilities
+
+@each $level, $value in $grays {
+  .bg-gray-#{$level} {
+    background-color: $value !important;
+  }
+}
+
+
+

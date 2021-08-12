@@ -1,0 +1,135 @@
+<template>
+  <div>
+    <div class="row mb-3">
+      <div class="col-md-12 pull-right text-right">
+        <button class="btn btn-success" @click="saveChanges()">
+          <i class="far fa-save"></i> Save Changes
+        </button>
+      </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="horizontal-line-wrapper mb-2">
+      <h6>Personal Information</h6>
+    </div>
+    <div class="clearfix"></div>
+    <div class="form-padding-left-right">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="prefix">Prefix</label>
+            <select id="studentPrefix" v-model="student.prefix" class="form-control">
+              <option value="Mr.">Mr.</option>
+              <option value="Ms.">Ms.</option>
+              <option value="Mrs.">Mrs.</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="firstname">First Name</label>
+            <input type="text" class="form-control" v-model="student.firstname" id="firstname" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="middlename">Middle Name</label>
+            <input type="text" class="form-control" v-model="student.middlename" id="middlename" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="lastname">Last Name</label>
+            <input type="text" class="form-control" v-model="student.lastname" id="lastname" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" v-model="student.gender" class="form-control">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="date_of_birth">
+              Date of birth
+              <span style="font-size: 74%;opacity: 73%;">( MM/DD/YYYY )</span>
+            </label>
+            <date-picker locale="en" v-model="student.date_of_birth" :max-date="new Date()"></date-picker>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  props: ['student'],
+  created() {
+    this.student = this.$parent.$parent.student;
+  },  
+  methods: {
+    saveChanges() {
+      const Toast = swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000
+      });
+      axios
+        .put(`/student/domestic/${window.student}`, {
+          prefix: this.student.prefix,
+          firstname: this.student.firstname,
+          middlename: this.student.middlename,
+          lastname: this.student.lastname,
+          gender: this.student.gender,
+          date_of_birth: this.student.date_of_birth
+        })
+        .then(res => {
+          // console.log(res);
+          if (res.data.status == "updated") {
+            Toast.fire({
+              type: "success",
+              title: "Updated Successfuly"
+            });
+          } else {
+            Toast.fire({
+              type: "error",
+              title: "Failed to Update"
+            });
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    }
+  }
+};
+</script>
+<style>
+.tab-pane {
+  border: 1px solid #e0dfdf;
+  border-top: none;
+  padding: 1.3rem;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  background-color: #ffffff;
+}
+.vc-text-base {
+  display: block;
+  width: 100%;
+  height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #6e707e;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #d1d3e2;
+  border-radius: 0.35rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+</style>

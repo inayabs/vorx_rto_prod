@@ -1,0 +1,186 @@
+<template>
+  <div>
+    <h3>Student List</h3>
+    <create-offer-letter></create-offer-letter>
+    <!-- <v-client-table :data="courseList" :columns="columns" :options="options" ref="courseTable"></v-client-table> -->
+    <v-client-table :data="student_list" :columns="columns" ref="studentList" :options="options">
+      <div slot="afterLimit" class="ml-2">
+        <div class="btn-group">
+          <a
+            href="javascript:void(0)"
+            @click="showCreateOfferLetter"
+            class="btn btn-success"
+            slot="afterLimit"
+          >
+            <i class="fas fa-plus"></i> Add Student
+          </a>
+          <button
+            type="button"
+            class="btn btn-success dropdown-toggle dropdown-toggle-split"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            Export to
+            <span class="sr-only">Toggle Dropdown</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="#">
+              <i class="far fa-file-pdf text-danger"></i>&nbsp; PDF
+            </a>
+            <a class="dropdown-item" href="#">
+              <i class="far fa-file-excel text-success"></i>&nbsp; Excel (CSV)
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group" slot="actions" slot-scope="{row}">
+        <a href="javascript:void(0)" class="btn btn-primary btn-sm" @click="showStudent(row._id)">
+          <i class="fas fa-edit"></i>
+        </a>
+        <a
+          href="javascript:void(0)"
+          class="btn btn-danger btn-sm text-white"
+          @click="deleteStudent(row._id)"
+        >
+          <i class="fas fa-trash"></i>
+        </a>
+      </div>
+    </v-client-table>
+  </div>
+</template>
+<script>
+import CreateOfferLetter from "./createOfferLetterComponent.vue";
+export default {
+  name: "app-modal",
+  mounted() {
+    console.log("hello");
+  },
+  components: {
+    CreateOfferLetter
+  },
+  data() {
+    return {
+      student_list: [],
+      columns: ["id", "name", "type", "application_type", "actions"],
+      options: {
+        initialPage: 1,
+        perPage: 10,
+        highlightMatches: true,
+        sortIcon: {
+          base: "fas",
+          up: "fa-sort-amount-up",
+          down: "fa-sort-amount-down",
+          is: "fa-sort"
+        },
+        headings: {
+          id: "#",
+          name: "Student Name",
+          type: "Student Type",
+          application_type: "Application Type",
+          actions: "Actions"
+        },
+        sortable: ["id", "name", "type"],
+        rowClassCallback(row) {
+          return (row.id = row.id);
+        },
+        columnClasses: { id: "class-is" },
+        texts: {
+          filter: "Search:",
+          filterPlaceholder: "Search keywords"
+        }
+      }
+    };
+  },
+  created() {
+    this.fetchStudents();
+  },
+  methods: {
+    showCreateOfferLetter() {
+      this.$modal.show("size-modal");
+    },
+    fetchStudents(page_url) {
+      let vm = this;
+      page_url = page_url || "/student/list";
+      fetch(page_url)
+        .then(res => res.json())
+        .then(res => {
+          console.log(res);
+          this.student_list = res.data;
+        })
+        .catch(err => console.log(err));
+    },
+    deleteStudent(student) {
+      const Toast = swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000
+      });
+
+      swal
+        .fire({
+          title: "Are you sure ?",
+          text: "You wont be able to revert this!",
+          type: "warning",
+          width: "25%",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!"
+        })
+        .then(result => {
+          if (result.value) {
+            axios
+              .delete(`/student/${student}`)
+              .then(response => {
+                this.fetchStudents();
+                Toast.fire({
+                  type: "success",
+                  title: "You deleted successfuly"
+                });
+              })
+              .catch(error => {
+                Toast.fire({
+                  type: "error",
+                  title: "Deletion failed"
+                });
+              });
+          }
+        });
+    },
+    // showStudent(student) {
+    //   window.location.href = "student/" + student;
+    // },
+    showStudent(_id) {
+      let i = this.student_list.map(item => item._id).indexOf(_id);
+      let dom = "Domestic";
+      if (this.$parent.$children[0].student_list[i].type === dom) {
+        // alert('domestic student ni ghorl');
+        window.location.href = "student/domestic/" + _id;
+      } else {
+        // alert('international student ni ghorl');
+        window.location.href = "student/" + _id;
+      }
+    },
+    searchStudent: _.debounce(function(e) {
+      this.search = e.target.value;
+      this.url = `/student/search/${this.search}`;
+      let vm = this;
+      if (this.search.length > 2) {
+        fetch(`/student/search/${this.search}`)
+          .then(res => res.json())
+          .then(res => {
+            this.student_list = res.data;
+            vm.makePagination(res.meta, res.links);
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      } else if (this.search.length == 0) {
+        this.fetchStudents();
+      }
+    }, 300)
+  }
+};
+</script>
